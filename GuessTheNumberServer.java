@@ -46,7 +46,8 @@ public class GuessTheNumberServer {
                         int diff = Math.abs(guess - secretNumber);
 
                         if (guess == secretNumber) {
-                            response = "✅ Correct! You guessed it in " + attempts + " attempts.";
+                            response = "✅ Correct! You guessed it in " + attempts + " attempts."+".<br><br><br>"
+                                    + "<a href='/' style='text-decoration:none; color:white; background-color:blue; padding:8px 16px; border-radius:5px;'>Play Again</a>";;
                             resetGame();
                         } else if (attempts >= MAX_ATTEMPTS) {
                             response = "❌ Out of attempts! The number was " + secretNumber + ".<br><br><br>"
