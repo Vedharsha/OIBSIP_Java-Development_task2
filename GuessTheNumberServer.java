@@ -3,7 +3,6 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.*;
 
 public class GuessTheNumberServer {
@@ -44,38 +43,70 @@ public class GuessTheNumberServer {
                     try {
                         int guess = Integer.parseInt(guessStr);
                         attempts++;
+                        int diff = Math.abs(guess - secretNumber);
 
                         if (guess == secretNumber) {
-                            response = "<h1>✅ Correct! You guessed it in " + attempts + " attempts.</h1>"
-                                     + "<a href='/'>Play Again</a>";
+                            response = "✅ Correct! You guessed it in " + attempts + " attempts.";
                             resetGame();
                         } else if (attempts >= MAX_ATTEMPTS) {
-                            response = "<h1>❌ Out of attempts! The number was " + secretNumber + ".</h1>"
-                                     + "<a href='/'>Play Again</a>";
+                            response = "❌ Out of attempts! The number was " + secretNumber + ".<br><br><br>"
+                                    + "<a href='/' style='text-decoration:none; color:white; background-color:blue; padding:8px 16px; border-radius:5px;'>Play Again</a>";
                             resetGame();
                         } else if (guess < secretNumber) {
-                            response = "<p>📉 Too low! Attempts left: " + (MAX_ATTEMPTS - attempts) + "</p>";
-                        } else {
-                            response = "<p>📈 Too high! Attempts left: " + (MAX_ATTEMPTS - attempts) + "</p>";
+                            if (diff <= 5) {
+                                response = "📉 Low, but 🔥 Very Close! Attempts left: " + (MAX_ATTEMPTS - attempts);
+                            } else if (diff <= 10) {
+                                response = "📉 Low, but ✨ Close! Attempts left: " + (MAX_ATTEMPTS - attempts);
+                            } else {
+                                response = "📉 Too Low! Attempts left: " + (MAX_ATTEMPTS - attempts);
+                            }
+                        } else { // guess > secretNumber
+                            if (diff <= 5) {
+                                response = "📈 High, but 🔥 Very Close! Attempts left: " + (MAX_ATTEMPTS - attempts);
+                            } else if (diff <= 10) {
+                                response = "📈 High, but ✨ Close! Attempts left: " + (MAX_ATTEMPTS - attempts);
+                            } else {
+                                response = "📈 Too High! Attempts left: " + (MAX_ATTEMPTS - attempts);
+                            }
                         }
+
                     } catch (NumberFormatException e) {
-                        response = "<p>❌ Invalid number!</p>";
+                        response = "❌ Invalid number!";
                     }
                 }
             }
 
-            // Always return the form
+            // Form for user input
             String form = "<form method='POST'>" +
                           "<label>Enter your guess (" + MIN + "-" + MAX + "): </label>" +
                           "<input type='number' name='guess' min='" + MIN + "' max='" + MAX + "' required>" +
                           "<input type='submit' value='Guess'>" +
                           "</form>";
 
-            String html = "<html><body style='font-family:Arial;text-align:center;'>" +
-                          "<h1>🎯 Guess the Number</h1>" +
-                          form +
-                          "<div>" + response + "</div>" +
-                          "</body></html>";
+            // HTML with CSS for attractive output
+            String html = "<!DOCTYPE html>" +
+            "<html>" +
+            "<head>" +
+            "<title>🎯 Guess the Number</title>" +
+            "<style>" +
+            "body { font-family: Arial, sans-serif; text-align: center; background: linear-gradient(to right, #f8cdda, #1c92d2); padding: 50px; }" +
+            "h1 { color: #fff; text-shadow: 2px 2px 4px #000; }" +
+            "form { margin: 20px auto; }" +
+            "input[type=number] { padding: 10px; width: 100px; border-radius: 5px; border: 1px solid #ccc; }" +
+            "input[type=submit] { padding: 10px 20px; border-radius: 5px; border: none; background-color: #4CAF50; color: white; cursor: pointer; font-weight: bold; }" +
+            "input[type=submit]:hover { background-color: #45a049; }" +
+            ".response { font-size: 18px; margin-top: 20px; padding: 15px; border-radius: 8px; display: inline-block; color: #fff; }" +
+            ".correct { background-color: #28a745; }" +
+            ".wrong { background-color: #dc3545; }" +
+            ".close { background-color: #ffc107; color: #000; }" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "<h1>🎯 Guess the Number</h1>" +
+            form +
+            "<div class='response " + getResponseClass(response) + "'>" + response + "</div>" +
+            "</body>" +
+            "</html>";
 
             byte[] bytes = html.getBytes();
             exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
@@ -102,6 +133,13 @@ public class GuessTheNumberServer {
                 }
             }
             return params;
+        }
+
+        private String getResponseClass(String response) {
+            if (response.contains("Correct")) return "correct";
+            if (response.contains("Very Close") || response.contains("Close")) return "close";
+            if (response.contains("Too Low") || response.contains("Too High") || response.contains("Out of attempts")) return "wrong";
+            return "";
         }
     }
 }
